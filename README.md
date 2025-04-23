@@ -2,6 +2,9 @@
 
 A neovim plugin for debugging `pandas` and `polars` DataFrames.
 
+https://github.com/user-attachments/assets/55e22539-9938-4b48-9ec5-b1b6a43b976b
+
+
 ## ⚡️ Requirements
 
 - [nvim-dap](https://github.com/mfussenegger/nvim-dap)
@@ -50,7 +53,7 @@ A neovim plugin for debugging `pandas` and `polars` DataFrames.
 - Use `<leader>df` in the repl session and input the dataframe variable.
 - Call `DFView` and input the dataframe variable.
 
-You can see my debugging setup [here](https://github.com/nelnn/dotfiles/blob/main/.config/nvim/lua/plugins/debugging.lua) as a reference.
+You can see my debugging setup [here](https://github.com/nelnn/dotfiles/blob/main/.config/nvim/lua/plugins/debugging.lua).
 
 
 > [!NOTE]
