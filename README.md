@@ -27,7 +27,7 @@ https://github.com/user-attachments/assets/55e22539-9938-4b48-9ec5-b1b6a43b976b
   -- Default Configuration
   opts = {
       cache_dir = "~/.cache/nvim/visidataframe",
-      file_name = "df_debug" .. os.time() .. ".csv",
+      file_name = "df_debug_" .. os.time() .. ".csv",
       window = {
         width = 0.9,
         height = 0.8,
