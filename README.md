@@ -1,4 +1,4 @@
-# 📊 `visidataframe.nvim`
+# 📊 `bear.nvim`
 
 A neovim plugin for debugging `pandas` and `polars` DataFrames.
 
@@ -19,14 +19,14 @@ https://github.com/user-attachments/assets/55e22539-9938-4b48-9ec5-b1b6a43b976b
 
 ```lua
 {
-  "nelnn/visidataframe.nvim",
+  "nelnn/bear.nvim",
   dependencies = {
     "mfussenegger/nvim-dap",
   },
 
   -- Default Configuration
   opts = {
-      cache_dir = "~/.cache/nvim/visidataframe",
+      cache_dir = "~/.cache/nvim/bear",
       file_name = "df_debug_" .. os.time() .. ".csv",
       window = {
         width = 0.9,
@@ -39,7 +39,7 @@ https://github.com/user-attachments/assets/55e22539-9938-4b48-9ec5-b1b6a43b976b
   },
 
   config = function(_, opts)
-    local df_visidata = require("visidataframe")
+    local df_visidata = require("bear")
     df_visidata.setup(opts)
   end,
 
