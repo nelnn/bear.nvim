@@ -9,7 +9,8 @@ M.config = {
     border = "rounded"
   },
   keymap = {
-    visualise = "<Leader>df"
+    visualise = "<leader>df",
+    visualise_buf = "<leader>dfb",
   }
 }
 
@@ -17,14 +18,20 @@ function M.setup(opts)
   opts = vim.tbl_deep_extend("force", {}, M.config, opts or {})
 
   vim.api.nvim_create_user_command("DFView", function()
-    require("bear.core").visualise_dataframe(opts)
+    require("bear.core").visualise_dataframe(opts, "float")
   end, { desc = "Visualise DataFrame under cursor" })
 
-  if M.config.keymap.visualise then
-    vim.keymap.set("n", M.config.keymap.visualise,
-      function() require("bear.core").visualise_dataframe(opts) end,
-      { desc = "Visualise DataFrame (float)" })
-  end
+  vim.api.nvim_create_user_command("DFViewBuf", function()
+    require("bear.core").visualise_dataframe(opts, "buffer")
+  end, { desc = "Visualise DataFrame under cursor" })
+
+  vim.keymap.set("n", M.config.keymap.visualise,
+    function() require("bear.core").visualise_dataframe(opts, "float") end,
+    { desc = "Visualise DataFrame in floating window" })
+
+  vim.keymap.set("n", M.config.keymap.visualise_buf,
+    function() require("bear.core").visualise_dataframe(opts, "buffer") end,
+    { desc = "Visualise DataFrame in new buffer" })
 end
 
 M.visualise = function(opts)
