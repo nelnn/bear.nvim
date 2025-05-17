@@ -2,6 +2,11 @@ local M = {}
 
 local dap = require("dap")
 
+local Mode = {
+  FLOAT = "float",
+  BUFFER = "buffer"
+}
+
 local function save_dataframe_py_expr(df_var, path)
   return string.format([[
       try:
@@ -48,6 +53,7 @@ local function show_floating_window(opts, path)
     border = "rounded"
   })
 
+
   vim.fn.termopen("visidata " .. path, {
     on_exit = function()
       vim.fn.system("rm -f " .. path)
@@ -56,7 +62,27 @@ local function show_floating_window(opts, path)
   vim.cmd("startinsert")
 end
 
-function M.visualise_dataframe(opts)
+local function show_in_new_buffer(opts, path)
+  local buf = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_buf_set_name(buf, "VisiData: " .. path)
+  vim.api.nvim_buf_set_option(buf, "buflisted", true)
+  local current_buf = vim.api.nvim_get_current_buf()
+  vim.api.nvim_set_current_buf(buf)
+
+
+  vim.fn.termopen("visidata " .. path, {
+    on_exit = function()
+      vim.fn.system("rm -f " .. path)
+      vim.api.nvim_set_current_buf(current_buf)
+      if vim.api.nvim_get_mode().mode == "t" then
+        vim.api.nvim_buf_delete(buf, { unload = true })
+      end
+    end
+  })
+  vim.cmd("startinsert")
+end
+
+function M.visualise_dataframe(opts, mode)
   opts = opts or {}
   vim.fn.system("mkdir -p " .. opts.cache_dir)
   local session = dap.session()
@@ -84,7 +110,12 @@ function M.visualise_dataframe(opts)
       return
     end
     if vim.fn.filereadable(df_path) == 1 then
-      show_floating_window(opts, df_path)
+      if mode == Mode.BUFFER then
+        show_in_new_buffer(opts, df_path)
+      end
+      if mode == Mode.FLOAT then
+        show_floating_window(opts, df_path)
+      end
     else
       vim.notify("Failed to export DataFrame.", vim.log.levelsgERROR)
     end
