@@ -52,11 +52,17 @@ local function show_floating_window(opts, path)
     style = "minimal",
     border = "rounded"
   })
+  vim.api.nvim_buf_set_keymap(buf, 't', opts.keymap.exit_terminal_mode, '<C-\\><C-n>', { noremap = true })
 
+  vim.keymap.set("n", "q", function()
+    vim.fn.system("rm -f " .. path)
+    vim.cmd("q")
+  end, { noremap = true, silent = true, buffer = buf })
 
   vim.fn.termopen("visidata " .. path, {
     on_exit = function()
       vim.fn.system("rm -f " .. path)
+      vim.api.nvim_buf_delete(buf, { unload = true })
     end
   })
   vim.cmd("startinsert")
@@ -68,6 +74,12 @@ local function show_in_new_buffer(opts, path)
   vim.api.nvim_buf_set_option(buf, "buflisted", true)
   local current_buf = vim.api.nvim_get_current_buf()
   vim.api.nvim_set_current_buf(buf)
+  vim.api.nvim_buf_set_keymap(buf, 't', opts.keymap.exit_terminal_mode, '<C-\\><C-n>', { noremap = true })
+
+  vim.keymap.set("n", "q", function()
+    vim.fn.system("rm -f " .. path)
+    vim.cmd("bp | bd! #")
+  end, { noremap = true, silent = true, buffer = buf })
 
 
   vim.fn.termopen("visidata " .. path, {
