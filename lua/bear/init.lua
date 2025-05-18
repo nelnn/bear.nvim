@@ -10,7 +10,7 @@ M.config = {
   },
   keymap = {
     visualise = "<leader>df",
-    visualise_buf = "<leader>dfb",
+    visualise_buf = "<leader>bdf",
     exit_terminal_mode = "<C-o>"
   }
 }
