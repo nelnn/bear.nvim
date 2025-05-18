@@ -26,6 +26,10 @@ function M.setup(opts)
     require("bear.core").visualise_dataframe(opts, "buffer")
   end, { desc = "Visualise DataFrame under cursor" })
 
+  vim.api.nvim_create_user_command("DFClean", function()
+    require("bear.utils").clean_cache(opts)
+  end, { desc = "Clean cache directory" })
+
   vim.keymap.set("n", opts.keymap.visualise,
     function() require("bear.core").visualise_dataframe(opts, "float") end,
     { desc = "Visualise DataFrame in floating window" })
