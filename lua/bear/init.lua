@@ -21,11 +21,11 @@ function M.setup(opts)
 
   vim.api.nvim_create_user_command("DFView", function()
     require("bear.core").visualise_dataframe(opts, "float")
-  end, { desc = "Visualise DataFrame under cursor" })
+  end, { desc = "Visualise DataFrame in floating window under cursor" })
 
   vim.api.nvim_create_user_command("DFViewBuf", function()
     require("bear.core").visualise_dataframe(opts, "buffer")
-  end, { desc = "Visualise DataFrame under cursor" })
+  end, { desc = "Visualise DataFrame in new buffer under cursor" })
 
   vim.api.nvim_create_user_command("DFClean", function()
     require("bear.utils").clean_cache(opts)
