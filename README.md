@@ -10,10 +10,10 @@ https://github.com/user-attachments/assets/55e22539-9938-4b48-9ec5-b1b6a43b976b
 ## ⚡️ Requirements
 
 - [nvim-dap](https://github.com/mfussenegger/nvim-dap)
-- [visidata](https://www.visidata.org/install/) installed globally.
+- [visidata](https://www.visidata.org/install/) installed globally
 - [polars](https://github.com/pola-rs/polars) and/or
   [pandas](https://github.com/pandas-dev/pandas) installed in your virtual
-  environment.
+  environment
 
 ## 📦 Installation
 
@@ -40,15 +40,16 @@ https://github.com/user-attachments/assets/55e22539-9938-4b48-9ec5-b1b6a43b976b
   },
   opts = {
       cache_dir = "~/.cache/nvim/bear",
-      file_name = "df_debug_" .. os.time() .. ".csv",
+      file_name = "tmp_" .. os.date("%m%d_%H%M%S") .. ".csv",
+      remove_file = true, -- remove file upon quitting visidata
       window = {
         width = 0.9,
         height = 0.8,
         border = "rounded"
       },
       keymap = {
-        visualise = "<Leader>df",
-        visualise_buf = "<leader>dfb",
+        visualise = "<leader>df",
+        visualise_buf = "<leader>bdf",
         exit_terminal_mode = "<C-o>",
       }
   },
@@ -67,7 +68,8 @@ https://github.com/user-attachments/assets/55e22539-9938-4b48-9ec5-b1b6a43b976b
 ## 🚀 Usage (with default keymaps)
 - `<leader>df`/`<leader>dfb` to view the dataframe under the cursor.
 - `<leader>df`/`<leader>dfb` in the repl session and input the dataframe variable.
-- `<C-o>` to exit from terminal to normal mode and `i` to enter.
+- `<C-o>` to exit from terminal to normal mode and `i` to enter. This is useful
+  when you want to change buffers.
 - `q` to close floating window or buffer in normal and terminal mode.
 
 You can see my debugging setup [here](https://github.com/nelnn/dotfiles/blob/main/.config/nvim/lua/plugins/debugging.lua).
@@ -77,7 +79,7 @@ You can see my debugging setup [here](https://github.com/nelnn/dotfiles/blob/mai
 | ------------- | -------------- |
 | DFView | View dataframe in a floating window|
 | DFViewBuf | View dataframe in a new buffer|
-| DFClear | Clear cache directory|
+| DFClean | Clear cache directory|
 
 
 > [!NOTE]
