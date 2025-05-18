@@ -10,7 +10,7 @@ M.config = {
   },
   keymap = {
     visualise = "<leader>df",
-    visualise_buf = "<leader>dfb",
+    visualise_buf = "<leader>bdf",
     exit_terminal_mode = "<C-o>"
   }
 }
@@ -26,11 +26,11 @@ function M.setup(opts)
     require("bear.core").visualise_dataframe(opts, "buffer")
   end, { desc = "Visualise DataFrame under cursor" })
 
-  vim.keymap.set("n", M.config.keymap.visualise,
+  vim.keymap.set("n", opts.keymap.visualise,
     function() require("bear.core").visualise_dataframe(opts, "float") end,
     { desc = "Visualise DataFrame in floating window" })
 
-  vim.keymap.set("n", M.config.keymap.visualise_buf,
+  vim.keymap.set("n", opts.keymap.visualise_buf,
     function() require("bear.core").visualise_dataframe(opts, "buffer") end,
     { desc = "Visualise DataFrame in new buffer" })
 end
