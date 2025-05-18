@@ -9,33 +9,40 @@ local Mode = {
 
 local function save_dataframe_py_expr(df_var, path)
   return string.format([[
+  try:
+      from pathlib import Path
       try:
-          from pathlib import Path
-          try:
-              import polars as pl
-              polars = True
-          except ImportError:
-            polars = False
-          try:
-              import pandas as pd
-              pandas = True
-          except ImportError:
-              pandas = False
-          if '%s' not in locals() and '%s' not in globals():
-              print("ERROR: Variable '%s' not found")
-              exit()
-          df_var = %s
-          if pandas and isinstance(df_var, pd.DataFrame):
-              df_var.to_csv('%s', index=True)
-          if polars and isinstance(df_var, pl.DataFrame):
-              df_var.write_csv('%s')
-          if polars and isinstance(df_var, pl.LazyFrame):
-              df_var.collect().write_csv('%s')
-          if Path('%s').exists():
-              print("SUCCESS: DataFrame saved to %s")
-      except Exception as e:
-          print("ERROR: " + str(e))
-  ]], df_var, df_var, df_var, df_var, path, path, path, path, path)
+          import polars as pl
+          has_polars = True
+      except ImportError:
+          has_polars = False
+      try:
+          import pandas as pd
+          has_pandas = True
+      except ImportError:
+          has_pandas = False
+
+      df_var = '%s'
+      path = '%s'
+
+      if df_var not in locals() and df_var not in globals():
+          print(f"ERROR: Variable '{{df_var}}' not found")
+          exit()
+
+      df = eval(df_var)
+
+      if has_pandas and isinstance(df, pd.DataFrame):
+          df.to_csv(path, index=True)
+      elif has_polars and isinstance(df, pl.DataFrame):
+          df.write_csv(path)
+      elif has_polars and isinstance(df, pl.LazyFrame):
+          df.collect().write_csv(path)
+
+      if Path(path).exists():
+          print(f"SUCCESS: DataFrame saved to {{path}}")
+  except Exception as e:
+      print("ERROR: " + str(e))
+  ]], df_var, path)
 end
 
 local function show_floating_window(opts, path)
