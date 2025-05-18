@@ -1,6 +1,8 @@
-# 📊 `bear.nvim`
+# 🐼`bear.nvim`🐻‍❄️
 
 A neovim plugin for debugging `pandas` and `polars` DataFrames.
+
+> This plugin is under active development. Expect breaking changes.
 
 https://github.com/user-attachments/assets/55e22539-9938-4b48-9ec5-b1b6a43b976b
 
@@ -23,8 +25,19 @@ https://github.com/user-attachments/assets/55e22539-9938-4b48-9ec5-b1b6a43b976b
   dependencies = {
     "mfussenegger/nvim-dap",
   },
+}
+```
 
-  -- Default Configuration
+
+<details>
+<summary>Default Confguration</summary>
+
+```lua
+{
+  "nelnn/bear.nvim",
+  dependencies = {
+    "mfussenegger/nvim-dap",
+  },
   opts = {
       cache_dir = "~/.cache/nvim/bear",
       file_name = "df_debug_" .. os.time() .. ".csv",
@@ -34,7 +47,9 @@ https://github.com/user-attachments/assets/55e22539-9938-4b48-9ec5-b1b6a43b976b
         border = "rounded"
       },
       keymap = {
-        visualise = "<Leader>df"
+        visualise = "<Leader>df",
+        visualise_buf = "<leader>dfb",
+        exit_terminal_mode = "<C-o>",
       }
   },
 
@@ -47,13 +62,22 @@ https://github.com/user-attachments/assets/55e22539-9938-4b48-9ec5-b1b6a43b976b
 }
 
 ```
+</details>
 
-## 🚀 Usage
-- Use `<leader>df` to view the dataframe under the cursor as shown in the demo.
-- Use `<leader>df` in the repl session and input the dataframe variable.
-- Call `DFView` and input the dataframe variable.
+## 🚀 Usage (with default keymaps)
+- `<leader>df`/`<leader>dfb` to view the dataframe under the cursor.
+- `<leader>df`/`<leader>dfb` in the repl session and input the dataframe variable.
+- `<C-o>` to exit from terminal to normal mode and `i` to enter.
+- `q` to close floating window or buffer in normal and terminal mode.
 
 You can see my debugging setup [here](https://github.com/nelnn/dotfiles/blob/main/.config/nvim/lua/plugins/debugging.lua).
+
+## ⌘ Commands
+| Command | Action |
+| ------------- | -------------- |
+| DFView | View dataframe in a floating window|
+| DFViewBuf | View dataframe in a new buffer|
+| DFClear | Clear cache directory|
 
 
 > [!NOTE]
