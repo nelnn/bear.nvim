@@ -7,12 +7,12 @@ M.config = {
   window = {
     width = 0.9,
     height = 0.8,
-    border = "rounded"
+    border = "rounded",
   },
   keymap = {
     visualise = "<leader>df",
     visualise_buf = "<leader>bdf",
-    exit_terminal_mode = "<C-o>"
+    exit_terminal_mode = "<C-o>",
   }
 }
 
