@@ -3,6 +3,7 @@ local M = {}
 M.config = {
   cache_dir = "~/.cache/nvim/bear",
   file_name = "tmp_" .. os.date("%m%d_%H%M%S") .. ".csv",
+  remove_file = true,
   window = {
     width = 0.9,
     height = 0.8,
@@ -25,6 +26,10 @@ function M.setup(opts)
   vim.api.nvim_create_user_command("DFViewBuf", function()
     require("bear.core").visualise_dataframe(opts, "buffer")
   end, { desc = "Visualise DataFrame under cursor" })
+
+  vim.api.nvim_create_user_command("DFClean", function()
+    require("bear.utils").clean_cache(opts)
+  end, { desc = "Clean cache directory" })
 
   vim.keymap.set("n", opts.keymap.visualise,
     function() require("bear.core").visualise_dataframe(opts, "float") end,

@@ -62,13 +62,17 @@ local function show_floating_window(opts, path)
   vim.api.nvim_buf_set_keymap(buf, 't', opts.keymap.exit_terminal_mode, '<C-\\><C-n>', { noremap = true })
 
   vim.keymap.set("n", "q", function()
-    vim.fn.system("rm -f " .. path)
+    if opts.remove_file then
+      vim.fn.system("rm -f " .. path)
+    end
     vim.cmd("q")
   end, { noremap = true, silent = true, buffer = buf })
 
   vim.fn.termopen("visidata " .. path, {
     on_exit = function()
-      vim.fn.system("rm -f " .. path)
+      if opts.remove_file then
+        vim.fn.system("rm -f " .. path)
+      end
       vim.api.nvim_buf_delete(buf, { unload = true })
     end
   })
