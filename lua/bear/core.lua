@@ -65,7 +65,6 @@ local function show_floating_window(opts, path)
     if opts.remove_file then
       vim.fn.system("rm -f " .. path)
     end
-    vim.fn.system("rm -f " .. path)
     vim.cmd("q")
   end, { noremap = true, silent = true, buffer = buf })
 
