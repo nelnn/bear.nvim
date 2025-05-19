@@ -9,39 +9,39 @@ local Mode = {
 
 local function save_dataframe_py_expr(df_var, path)
   return string.format([[
-  try:
-      from pathlib import Path
       try:
-          import polars as pl
-          has_polars = True
-      except ImportError:
-          has_polars = False
-      try:
-          import pandas as pd
-          has_pandas = True
-      except ImportError:
-          has_pandas = False
+          from pathlib import Path
+          try:
+              import polars as pl
+              polars_installed = True
+          except ImportError:
+              polars_installed = False
+          try:
+              import pandas as pd
+              pandas_installed = True
+          except ImportError:
+              pandas_installed = False
 
-      df_var = '%s'
-      path = '%s'
+          var_name = "%s"
+          file_path = "%s"
 
-      if df_var not in locals() and df_var not in globals():
-          print(f"ERROR: Variable '{{df_var}}' not found")
-          exit()
+          if var_name not in locals() and var_name not in globals():
+              print(f"ERROR: Variable '{var_name}' not found")
+              exit()
 
-      df = eval(df_var)
+          df_var = eval(var_name)
 
-      if has_pandas and isinstance(df, pd.DataFrame):
-          df.to_csv(path, index=True)
-      elif has_polars and isinstance(df, pl.DataFrame):
-          df.write_csv(path)
-      elif has_polars and isinstance(df, pl.LazyFrame):
-          df.collect().write_csv(path)
+          if pandas_installed and isinstance(df_var, pd.DataFrame):
+              df_var.to_csv(file_path, index=True)
+          elif polars_installed and isinstance(df_var, pl.DataFrame):
+              df_var.write_csv(file_path)
+          elif polars_installed and isinstance(df_var, pl.LazyFrame):
+              df_var.collect().write_csv(file_path)
 
-      if Path(path).exists():
-          print(f"SUCCESS: DataFrame saved to {{path}}")
-  except Exception as e:
-      print("ERROR: " + str(e))
+          if Path(file_path).exists():
+              print(f"SUCCESS: DataFrame saved to {file_path}")
+      except Exception as e:
+          print("ERROR: " + str(e))
   ]], df_var, path)
 end
 
