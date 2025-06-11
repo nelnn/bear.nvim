@@ -2,8 +2,6 @@
 
 A neovim plugin for debugging `pandas` and `polars` DataFrames.
 
-> This plugin is under active development. Expect breaking changes.
-
 https://github.com/user-attachments/assets/55e22539-9938-4b48-9ec5-b1b6a43b976b
 
 
