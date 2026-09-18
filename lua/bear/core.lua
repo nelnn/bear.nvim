@@ -7,41 +7,50 @@ local Mode = {
   BUFFER = "buffer"
 }
 
-local function save_dataframe_py_expr(df_var, path)
+local function save_dataframe_py_expr(df_var, path, custom_python_logic)
   return string.format([[
-      try:
-          from pathlib import Path
-          try:
-              import polars as pl
-              polars_imported = True
-          except ImportError:
-              polars_imported = False
-          try:
-              import pandas as pd
-              pandas_imported = True
-          except ImportError:
-              pandas_imported = False
+try:
+    from pathlib import Path
+    try:
+        import polars as pl
+        polars_imported = True
+    except ImportError:
+        polars_imported = False
+    try:
+        import pandas as pd
+        pandas_imported = True
+    except ImportError:
+        pandas_imported = False
 
-          if not (polars_imported or pandas_imported):
-              raise Exception('Neither polars nor pandas imported (missing or error on import).')
+    if not (polars_imported or pandas_imported):
+        raise Exception('Neither polars nor pandas imported (missing or error on import).')
 
-          var_name = "%s"
-          file_path = "%s"
+    var_name: str = "%s"
+    file_path: str = "%s"
 
-          df_var = eval(var_name)
+    df_var = eval(var_name)
 
-          if pandas_imported and isinstance(df_var, (pd.DataFrame, pd.Series)):
-              df_var.to_csv(file_path, index=True)
-          elif polars_imported and isinstance(df_var, pl.DataFrame):
-              df_var.write_csv(file_path)
-          elif polars_imported and isinstance(df_var, pl.LazyFrame):
-              df_var.collect().write_csv(file_path)
+    if pandas_imported and isinstance(df_var, (pd.DataFrame, pd.Series)):
+        df_var.to_csv(file_path, index=True)
+    elif polars_imported and isinstance(df_var, pl.DataFrame):
+        df_var.write_csv(file_path)
+    elif polars_imported and isinstance(df_var, pl.LazyFrame):
+        df_var.collect().write_csv(file_path)
 
-          if Path(file_path).exists():
-              print(f"SUCCESS: DataFrame saved to {file_path}")
-      except Exception as e:
-          print("ERROR: " + str(e))
-  ]], df_var, path)
+    %s
+
+    if Path(file_path).exists():
+        print(f"SUCCESS: DataFrame saved to {file_path}")
+except Exception as e:
+    print("ERROR: " + str(e))
+]],
+    df_var,
+    path,
+    custom_python_logic
+  )
+end
+function M.show_py_expr(custom_python_logic)
+  print(save_dataframe_py_expr('<DF>', '<PATH>', custom_python_logic))
 end
 
 local function show_floating_window(opts, path)
@@ -132,7 +141,7 @@ function M.visualise_dataframe(opts, mode)
 
   local df_path = vim.fn.expand(opts.cache_dir .. "/" .. opts.file_name)
 
-  local expr = save_dataframe_py_expr(df_var, df_path)
+  local expr = save_dataframe_py_expr(df_var, df_path, opts.custom_python_logic)
 
   session:evaluate(expr, function(err, _)
     if err then
