@@ -38,12 +38,52 @@ function M.get_visual_selection()
   return table.concat(lines, " ")
 end
 
+function M.export_path(opts)
+  local dir = vim.fn.expand(opts.cache_dir)
+  vim.fn.mkdir(dir, "p")
+  if vim.fn.isdirectory(dir) ~= 1 then
+    error("Not a directory: " .. dir)
+  end
+  if opts.file_name == "" or opts.file_name:find("[/\\]") then
+    error("file_name must be a filename, not a path")
+  end
+  local stem, extension = opts.file_name:match("^(.*)(%.[^.]+)$")
+  stem, extension = stem or opts.file_name, extension or ".csv"
+  -- A separate file per request avoids stale data and concurrent view races.
+  return string.format("%s/%s_%d_%d%s", dir, stem, vim.fn.getpid(), vim.uv.hrtime(), extension)
+end
+
+function M.write_file(path, content)
+  local file, err = io.open(path, "wb")
+  if not file then
+    error(err, 0)
+  end
+  local ok, write_err = file:write(content)
+  local closed, close_err = file:close()
+  if not ok or not closed then
+    error(write_err or close_err, 0)
+  end
+end
+
 function M.clean_cache(opts)
   local answer = vim.fn.input("Clear cache? (y/n): ")
-  if answer == "y" or answer == "Y" then
-    vim.fn.system("rm -f " .. opts.cache_dir .. "/*")
-    vim.notify("Cache cleared", vim.log.levels.INFO)
+  if answer ~= "y" and answer ~= "Y" then
+    return
   end
+  local dir = vim.fn.expand(opts.cache_dir)
+  if vim.fn.isdirectory(dir) == 1 then
+    for _, name in ipairs(vim.fn.readdir(dir)) do
+      local path = dir .. "/" .. name
+      local kind = vim.fn.getftype(path)
+      if kind == "file" or kind == "link" then
+        if vim.fn.delete(path) ~= 0 then
+          vim.notify("Could not remove " .. path, vim.log.levels.ERROR)
+          return
+        end
+      end
+    end
+  end
+  vim.notify("Cache cleared", vim.log.levels.INFO)
 end
 
 return M

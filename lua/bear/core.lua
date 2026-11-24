@@ -1,155 +1,67 @@
 local M = {}
 
-local dap = require("dap")
-
-local Mode = {
-  FLOAT = "float",
-  BUFFER = "buffer"
-}
-
-local function save_dataframe_py_expr(df_var, path)
-  return string.format([[
-      try:
-          from pathlib import Path
-          try:
-              import polars as pl
-              polars_imported = True
-          except ImportError:
-              polars_imported = False
-          try:
-              import pandas as pd
-              pandas_imported = True
-          except ImportError:
-              pandas_imported = False
-
-          if not (polars_imported or pandas_imported):
-              raise Exception('Neither polars nor pandas imported (missing or error on import).')
-
-          var_name = "%s"
-          file_path = "%s"
-
-          df_var = eval(var_name)
-
-          if pandas_imported and isinstance(df_var, (pd.DataFrame, pd.Series)):
-              df_var.to_csv(file_path, index=True)
-          elif polars_imported and isinstance(df_var, pl.DataFrame):
-              df_var.write_csv(file_path)
-          elif polars_imported and isinstance(df_var, pl.LazyFrame):
-              df_var.collect().write_csv(file_path)
-
-          if Path(file_path).exists():
-              print(f"SUCCESS: DataFrame saved to {file_path}")
-      except Exception as e:
-          print("ERROR: " + str(e))
-  ]], df_var, path)
-end
-
-local function show_floating_window(opts, path)
-  local width = math.floor(vim.o.columns * opts.window.width)
-  local height = math.floor(vim.o.lines * opts.window.height)
-  local buf = vim.api.nvim_create_buf(false, true)
-
-  local _ = vim.api.nvim_open_win(buf, true, {
-    relative = "editor",
-    width = width,
-    height = height,
-    col = math.floor((vim.o.columns - width) / 2),
-    row = math.floor((vim.o.lines - height) / 2),
-    style = "minimal",
-    border = "rounded"
-  })
-  vim.api.nvim_buf_set_keymap(buf, 't', opts.keymap.exit_terminal_mode, '<C-\\><C-n>', { noremap = true })
-
-  vim.keymap.set("n", "q", function()
-    if opts.remove_file then
-      vim.fn.system("rm -f " .. path)
-    end
-    vim.cmd("q")
-  end, { noremap = true, silent = true, buffer = buf })
-
-  vim.fn.jobstart("visidata " .. path, {
-    term = true,
-    on_exit = function()
-      if opts.remove_file then
-        vim.fn.system("rm -f " .. path)
-      end
-      vim.api.nvim_buf_delete(buf, { unload = true })
-    end
-  })
-  vim.cmd("startinsert")
-end
-
-local function show_in_new_buffer(opts, path)
-  local buf = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_name(buf, "VisiData: " .. path)
-  vim.api.nvim_set_option_value('buflisted', true, { buf = 0 })
-  local current_buf = vim.api.nvim_get_current_buf()
-  vim.api.nvim_set_current_buf(buf)
-  vim.api.nvim_buf_set_keymap(buf, 't', opts.keymap.exit_terminal_mode, '<C-\\><C-n>', { noremap = true })
-
-  vim.keymap.set("n", "q", function()
-    vim.fn.system("rm -f " .. path)
-    vim.cmd("bp | bd! #")
-  end, { noremap = true, silent = true, buffer = buf })
-
-
-  vim.fn.jobstart("visidata " .. path, {
-    term = true,
-    on_exit = function()
-      vim.fn.system("rm -f " .. path)
-      vim.api.nvim_set_current_buf(current_buf)
-      if vim.api.nvim_get_mode().mode == "t" then
-        vim.api.nvim_buf_delete(buf, { unload = true })
-      end
-    end
-  })
-  vim.cmd("startinsert")
-end
-
---- Evaluates a DataFrame expression in the active debug session and shows it in VisiData.
+--- Evaluates a DataFrame/Series expression in the active debug session and shows it in VisiData.
 ---@param opts table Plugin config (cache_dir, file_name, window, keymap, ...).
 ---@param mode "float"|"buffer" Where to display the VisiData output.
-function M.visualise_dataframe(opts, mode)
-  opts = opts or {}
-  vim.fn.system("mkdir -p " .. opts.cache_dir)
-  local session = dap.session()
+---@param expression? string Explicit expression, otherwise use the selection or cursor.
+function M.visualise_dataframe(opts, mode, expression)
+  local session = require("dap").session()
   if not session then
     vim.notify("No active debug session", vim.log.levels.ERROR)
     return
   end
-
-  local df_var = require('bear.utils').get_visual_selection()
-  if df_var == "" then
-    df_var = vim.fn.expand("<cword>")
-    if df_var == "" then
-      df_var = vim.fn.input("Enter dataframe variable name: ")
-      if df_var == "" then
-        vim.notify("No variable specified", vim.log.levels.WARN)
-        return
-      end
-    end
+  if vim.fn.executable("visidata") ~= 1 then
+    vim.notify("visidata is not installed or not on PATH", vim.log.levels.ERROR)
+    return
   end
 
-  local df_path = vim.fn.expand(opts.cache_dir .. "/" .. opts.file_name)
-
-  local expr = save_dataframe_py_expr(df_var, df_path)
-
-  session:evaluate(expr, function(err, _)
-    if err then
-      vim.notify("Evaluation error: " .. vim.inspect(err), vim.log.levels.ERROR)
-      return
+  local utils = require("bear.utils")
+  if not expression or expression == "" then
+    expression = utils.get_visual_selection()
+    if expression == "" then
+      expression = vim.bo.filetype ~= "dap-repl" and vim.fn.expand("<cword>") or ""
     end
-    if vim.fn.filereadable(df_path) == 1 then
-      if mode == Mode.BUFFER then
-        show_in_new_buffer(opts, df_path)
-      end
-      if mode == Mode.FLOAT then
-        show_floating_window(opts, df_path)
-      end
-    else
-      vim.notify("Failed to export DataFrame.", vim.log.levels.ERROR)
+    if expression == "" then
+      expression = vim.fn.input("Enter dataframe expression: ")
     end
-  end)
+  end
+  if expression:match("^%s*$") then
+    vim.notify("No variable specified", vim.log.levels.WARN)
+    return
+  end
+
+  local exporter = require("bear.export")
+  local ok, path = pcall(utils.export_path, opts)
+  if not ok then
+    vim.notify("Cannot create export path: " .. tostring(path), vim.log.levels.ERROR)
+    return
+  end
+  local expr = exporter.expression(expression, path, opts)
+
+  session:evaluate({
+    expression = expr,
+    context = "repl",
+    -- debugpy's rawString extension avoids its normal string repr truncation.
+    format = { rawString = true },
+  }, vim.schedule_wrap(function(err, response)
+    local success, failure = pcall(function()
+      if err then
+        error("Evaluation error: " .. vim.inspect(err), 0)
+      end
+      local result = exporter.decode(response)
+      if result.transport == "dap" then
+        utils.write_file(path, result.csv)
+      end
+      if vim.fn.filereadable(path) ~= 1 then
+        error("Export file is not accessible locally. Use export_transport='dap' for remote sessions.", 0)
+      end
+      require("bear.view").open(opts, path, mode or "float")
+    end)
+    if not success then
+      vim.fn.delete(path)
+      vim.notify("Failed to export DataFrame: " .. tostring(failure), vim.log.levels.ERROR)
+    end
+  end))
 end
 
 return M
